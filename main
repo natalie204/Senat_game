@@ -1,0 +1,66 @@
+import random
+from senat.Board import Board
+from senat.player import AIPlayerAdapter, HumanPlayer
+# from senat.Tree import print_minimax_tree
+from senat.helperFunction import print_minimax_tree
+STICK_COUNTS = {
+    1: 4,
+    2: 6,
+    3: 4,
+    4: 1,
+    5: 1
+}
+
+def roll_sticks():
+    outcomes = []
+    for steps, count in STICK_COUNTS.items():
+        outcomes.extend([steps] * count)
+    return random.choice(outcomes)
+
+
+
+def main():
+    debug = input("Enable AI Debug Mode? (y/n): ").lower() == "y"
+    difficulty = input(
+        "Choose AI difficulty (easy / medium / hard): "
+    ).lower()
+
+    if difficulty not in ("easy", "medium", "hard"):
+        print("Invalid difficulty, defaulting to medium.")
+        difficulty = "medium"
+    board = Board()
+
+    player1 = HumanPlayer(1)
+    player2 = AIPlayerAdapter(2, debug, difficulty="easy")
+
+    players = {1: player1, 2: player2}
+
+    while not board.is_terminal():
+        board.print_board()
+
+        current_player = players[board.current_player]
+        roll = roll_sticks()
+
+        print(f"\n Player {board.current_player} rolled {roll}")
+        if isinstance(current_player, AIPlayerAdapter) and debug:
+            print("\n MINIMAX TREE ")
+            tree_root = current_player.ai.build_minimax_tree(
+                board,
+                depth=2,
+                maximizing=True
+            )
+            print_minimax_tree(tree_root)
+            print(" END TREE \n")
+        move = current_player.get_move(board, roll)
+
+        if move:
+            board.apply_move(move)
+        else:
+            board.switch_player()
+
+    winner = board.get_winner()
+    print(f"\n Player {winner} wins the game!")
+
+    
+if __name__ == "__main__":
+    main()
