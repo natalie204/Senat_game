@@ -1,0 +1,64 @@
+from abc import ABC, abstractmethod
+
+from senat.Ai import AIPlayer
+
+
+class Player(ABC):
+
+    def __init__(self, player_id):
+        self.player_id = player_id
+
+    @abstractmethod
+    def get_move(self, board, roll):
+        pass
+
+    @abstractmethod
+    def is_human(self):
+        pass
+
+
+
+class HumanPlayer(Player):
+
+    def __init__(self, player_id):
+        super().__init__(player_id)
+
+    def is_human(self):
+        return True
+
+    def get_move(self, board, roll):
+        legal_moves = board.get_legal_moves(roll)
+
+        if not legal_moves:
+            print("No legal moves.")
+            return None
+
+        print(f"Player {self.player_id} | Roll = {roll}")
+        
+        for i, move in enumerate(legal_moves):
+              current_pos = board.positions[self.player_id][move.pawn_index]
+              new_pos = current_pos + move.steps
+              print(f"{i}: Pawn {move.pawn_index} | Current Pos: {current_pos} -> New Pos: {new_pos}")
+
+        while True:
+            try:
+                choice = int(input("Choose move index: "))
+                if 0 <= choice < len(legal_moves):
+                    return legal_moves[choice]
+            except ValueError:
+                pass
+
+            print("Invalid choice, try again.")
+
+
+class AIPlayerAdapter(Player):
+
+    def __init__(self, player_id ,debug,difficulty="medium"):
+        super().__init__(player_id)
+        self.ai = AIPlayer(player_id, difficulty="difficulty")
+
+    def is_human(self):
+        return False
+
+    def get_move(self, board, roll):
+        return self.ai.choose_move(board, roll)
